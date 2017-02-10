@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="-1" />
+    <meta http-equiv="Cache-Control" content="no-cache" />
+
+    <meta charset="utf-8">
+    <title>3Dmaze</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta name="apple-mobile-web-app-title" content="H5Game">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name='format-detection' content='telephone=no'>
+    <meta name="screen-orientation" content="portrait">
+    <meta name="full-screen" content="yes">
+    <meta name="x5-fullscreen" content="true">
+    <meta name="360-fullscreen" content="true">
+    <!-- Babylon.js -->
+    <script src="src/hand.js"></script>
+    <script src="src/cannon.js"></script>
+    <script src="src/Oimo.js"></script>
+    <script src="src/babylon.js"></script>
+    <!-- maze.js -->
+    <script type="text/javascript" src="src/Maze.js"></script>
+
+    <style>
+        html,
+        body {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        #renderCanvas {
+            width: 100%;
+            height: 60%;
+        }
+        
+        #canvas {
+            width: 100%;
+            height: 40%;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="canvasZone">
+        <canvas id="renderCanvas"></canvas>
+    </div>
+    <!-- maze -->
+    <div id="container" class="splash">
+        <canvas id="canvas"></canvas>
+        <div id="info"></div>
+    </div>
+
+    <script type="text/javascript" src="js/main.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', game.init)
+    </script>
+</body>
+
+</html>
