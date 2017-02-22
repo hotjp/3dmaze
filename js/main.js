@@ -493,10 +493,11 @@ function makeScene() {
           depth: Math.abs(w[3].z - w[0].z)
         };
       };
-
-      var wallMat = new BABYLON.StandardMaterial("mat_wall", scene);
-      wallMat.diffuseColor = new BABYLON.Color3(0.5, 0.8, 0.6);
-
+      // 墙体样式
+      // var wallMat = new BABYLON.StandardMaterial("mat_wall", scene);
+      // wallMat.diffuseColor = new BABYLON.Color3(0.5, 0.8, 0.6);
+      var materialWood = new BABYLON.StandardMaterial("wood", scene);
+      materialWood.diffuseTexture = new BABYLON.Texture("img/wood.jpg", scene); // wood.jpg
       var mazeShiftX = 10,
         mazeShiftZ = 10;
       for (var i = 0; i < walls.length; ++i) {
@@ -512,7 +513,8 @@ function makeScene() {
           wallHeight / 2,
           w[0].z + (w[3].z - w[0].z) / 2 + mazeShiftZ
         );
-        box.material = wallMat;
+        // 设置墙体样式
+        box.material = materialWood;
         box.checkCollisions = true;
         box.setPhysicsState({ impostor: BABYLON.PhysicsEngine.BoxImpostor, move: false, restitution: 0, mass: 0, friction: 0 });
 
