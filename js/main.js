@@ -1,33 +1,49 @@
 var game = {
-  maze: {
+  option: {
+    time: 1 * 60 * 1000,
     width: 20,
     height: 20
   },
   engine: null,
   init: function () {
-    this.engine = makeScene();
+    game.engine = makeScene();
   },
   stopRender: function () {
     this.engine.stopRenderLoop();
   },
-  // runRender:function(){
-  //   var that = this;
-  //   this.engine.runRenderLoop(function(){
-  //     that.engine.scene.render()
-  //   });
-  // },
+
   finished: function () {
     this.stopRender();
     alert('成功');
   },
-  timer: function () {
-
+  timer: {
+    lastTime: 0,
+    flag: null,
+    clock: null,
+    start: function () {
+      var timer = game.timer;
+      timer.lastTime = game.option.time;
+      timer.flag = new Date();
+      timer.clock = setInterval(function () {
+        game.timer.lastTime -= 100;
+        console.log(game.timer.lastTime)
+        if (game.timer.lastTime <= 0) {
+          game.timer.timeout();
+        }
+      }, 100);
+    },
+    timeout: function () {
+      var clock = game.timer.clock;
+      clearInterval(clock);
+      game.stopRender();
+      alert('时间到');
+    }
   }
 };
 
 var maze = new Maze({
-  width: game.maze.width,
-  height: game.maze.height,
+  width: game.option.width,
+  height: game.option.height,
 
   perfect: true,
   braid: false,
@@ -41,6 +57,7 @@ var maze = new Maze({
     this.checkCount = {};
     this.traceInfo = {};
     this.foundEndNode = false;
+    game.timer.start();
   },
 
   getNeighbor: function () {
