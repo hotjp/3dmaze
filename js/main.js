@@ -12,10 +12,10 @@ var game = {
   directionListener: function () {
     var that = this;
     window.addEventListener('deviceorientation', function (e) {
-      console.log('absolute: ' + e.absolute)
-      console.log('alpha: ' + e.alpha)
-      console.log('beta: ' + e.beta)
-      console.log('gamma: ' + e.gamma)
+      console.log('absolute: ' + e.absolute);
+      console.log('alpha: ' + e.alpha);
+      console.log('beta: ' + e.beta);
+      console.log('gamma: ' + e.gamma);
       that.direction.now = e;
     });
   },
@@ -27,7 +27,7 @@ var game = {
       alpha: this.direction.now.alpha,
       beta: this.direction.now.beta,
       gamma: this.direction.now.gamma
-    }
+    };
   },
   init: function () {
     game.directionListener();
@@ -52,7 +52,7 @@ var game = {
       timer.flag = new Date();
       timer.clock = setInterval(function () {
         game.timer.lastTime -= 100;
-        console.log(game.timer.lastTime)
+        console.log(game.timer.lastTime);
         if (game.timer.lastTime <= 0) {
           game.timer.timeout();
         }
