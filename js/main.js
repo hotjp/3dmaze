@@ -5,7 +5,33 @@ var game = {
     height: 20
   },
   engine: null,
+  direction: {
+    now: {},
+    flag: {}
+  },
+  directionListener: function () {
+    var that = this;
+    window.addEventListener('deviceorientation', function (e) {
+      console.log('absolute: ' + e.absolute)
+      console.log('alpha: ' + e.alpha)
+      console.log('beta: ' + e.beta)
+      console.log('gamma: ' + e.gamma)
+      that.direction.now = e;
+    });
+  },
+  getDirection: function () {
+    // TODO: 获取当前偏移方向
+  },
+  getFlagDirection: function () {
+    this.direction.flag = {
+      alpha: this.direction.now.alpha,
+      beta: this.direction.now.beta,
+      gamma: this.direction.now.gamma
+    }
+  },
   init: function () {
+    game.directionListener();
+    game.getFlagDirection();
     game.engine = makeScene();
   },
   stopRender: function () {
@@ -395,7 +421,7 @@ function makeScene() {
     var light = new BABYLON.HemisphericLight('light1', new BABYLON.Vector3(0, 1, 0), scene);
 
     // create a built-in "ground" shape; its constructor takes the same 5 params as the sphere's one
-    var ground = BABYLON.Mesh.CreateGround('ground1', 30, 30, 2, scene);
+    var ground = BABYLON.Mesh.CreateGround('ground', 30, 30, 2, scene);
     ground.material = new BABYLON.StandardMaterial("TextPlaneMaterial", scene);
     ground.material.backFaceCulling = false;
     ground.material.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5);
@@ -496,8 +522,8 @@ function makeScene() {
       // 墙体样式
       // var wallMat = new BABYLON.StandardMaterial("mat_wall", scene);
       // wallMat.diffuseColor = new BABYLON.Color3(0.5, 0.8, 0.6);
-      var materialWood = new BABYLON.StandardMaterial("wood", scene);
-      materialWood.diffuseTexture = new BABYLON.Texture("img/wood.jpg", scene); // wood.jpg
+      var materialWall = new BABYLON.StandardMaterial("wood", scene);
+      materialWall.diffuseTexture = new BABYLON.Texture("img/wood.jpg", scene); // wood.jpg
       var mazeShiftX = 10,
         mazeShiftZ = 10;
       for (var i = 0; i < walls.length; ++i) {
@@ -514,7 +540,7 @@ function makeScene() {
           w[0].z + (w[3].z - w[0].z) / 2 + mazeShiftZ
         );
         // 设置墙体样式
-        box.material = materialWood;
+        box.material = materialWall;
         box.checkCollisions = true;
         box.setPhysicsState({ impostor: BABYLON.PhysicsEngine.BoxImpostor, move: false, restitution: 0, mass: 0, friction: 0 });
 
@@ -537,14 +563,36 @@ function makeScene() {
       ball.position.x = (walls[0][0].x + cellSize) / 2 + (cellSize / 8) - mazeShiftX;
       ball.position.z = (walls[0][0].z - cellSize) / 2 - (cellSize / 8) + mazeShiftZ;
       // 材质
-      var materialWood = new BABYLON.StandardMaterial("wood", scene);
-      materialWood.diffuseTexture = new BABYLON.Texture("img/wood.jpg", scene); // wood.jpg
-      ball.material = materialWood;
-      ball.material.diffuseColor = new BABYLON.Color3(0.9, 0.5, 0.5);
+      var materialBall = new BABYLON.StandardMaterial("ball", scene);
+      materialBall.diffuseTexture = new BABYLON.Texture("img/metal9.jpg", scene); // wood.jpg
+      ball.material = materialBall;
+      ball.material.diffuseColor = new BABYLON.Color3(0.8, 0.8, 0.8);
       ball.checkCollisions = true;
       ball.setPhysicsState({ impostor: BABYLON.PhysicsEngine.SphereImpostor, move: true, restitution: 0.1, mass: 3, friction: 0.1 });
+      // 相机
+      // create a FreeCamera, and set its position to (x:0, y:5, z:-10)
+      var cameraAll = new BABYLON.ArcRotateCamera("cameraAll", 0, 0, 0, new BABYLON.Vector3(5, 9, -10), scene);
+      cameraAll.setTarget(BABYLON.Vector3.Zero());
+      cameraAll.setPosition(new BABYLON.Vector3(10, 15, -15));
+      cameraAll.attachControl(canvas, true);
+      // 跟随相机
+      var cameraFollow = game.cameraFollow = new BABYLON.FollowCamera("cameraFollow", new BABYLON.Vector3(10, 10, -20), scene);
+      cameraFollow.lockedTarget = ball;
+      cameraFollow.radius = 0; // how far from the object to follow
+      cameraFollow.heightOffset = 3; // how high above the object to place the camera
+      cameraFollow.rotationOffset = 180; // the viewing angle
+      cameraFollow.cameraAcceleration = 0.005 // how fast to move
+      cameraFollow.maxCameraSpeed = 20 // speed limit
+        // 摇杆相机
+      var cameraSticks = game.sticksCamera = new BABYLON.VirtualJoysticksCamera("cameraSticks", new BABYLON.Vector3(-10, 1, 10), scene);
+      cameraSticks.lockedTarget = ball;
 
-      // 终点
+      // 激活相机
+      scene.activeCamera = cameraFollow
+        // 开启多个相机
+        // scene.activeCameras.push(cameraAll);
+        // scene.activeCameras.push(cameraFollow);
+        // 终点
       var diamondBorderSize = 0.3,
         diamondOptions = { width: diamondBorderSize, height: diamondBorderSize, depth: diamondBorderSize };
       var diamond = scene.diamond = BABYLON.MeshBuilder.CreateBox("diamond", diamondOptions, scene);
