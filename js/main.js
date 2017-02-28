@@ -1,26 +1,42 @@
 var game = {
+  _DEBUG_: true,
   option: {
+    cellSize: 1,
     time: 1 * 60 * 1000,
-    width: 20,
-    height: 20
+    width: 10,
+    height: 10
   },
   engine: null,
   direction: {
     now: {},
     flag: {}
   },
+  world: {
+
+  },
   directionListener: function () {
-    var that = this;
     window.addEventListener('deviceorientation', function (e) {
-      console.log('absolute: ' + e.absolute);
-      console.log('alpha: ' + e.alpha);
-      console.log('beta: ' + e.beta);
-      console.log('gamma: ' + e.gamma);
-      that.direction.now = e;
-    });
+      game.direction.now = {
+        alpha: e.alpha,
+        beta: e.beta,
+        gamma: e.gamma
+      };
+    }, false);
+  },
+  deviceOrientationHandler: function () {
+    // 根据基本坐标和当前偏移量计算运动方向
+    var flag = game.direction.flag;
+    var now = game.direction.now;
+    var direction = {
+      alpha: now.alpha - flag.alpha,
+      beta: now.beta - flag.beta,
+      gamma: now.gamma - flag.gamma
+    };
+    return direction;
   },
   getDirection: function () {
     // TODO: 获取当前偏移方向
+    game.direction.flag = JSON.parse(JSON.stringify(game.direction.now));
   },
   getFlagDirection: function () {
     this.direction.flag = {
@@ -29,15 +45,23 @@ var game = {
       gamma: this.direction.now.gamma
     };
   },
+  randomWorld: function () {
+
+  },
   init: function () {
-    game.directionListener();
-    game.getFlagDirection();
+    if (game._DEBUG_) {
+      openDebug();
+    }
+    game.randomWorld();
+    if (window.DeviceOrientationEvent) {
+      // 重力感应
+      game.directionListener();
+    }
     game.engine = makeScene();
   },
   stopRender: function () {
     this.engine.stopRenderLoop();
   },
-
   finished: function () {
     this.stopRender();
     alert('成功');
@@ -52,7 +76,7 @@ var game = {
       timer.flag = new Date();
       timer.clock = setInterval(function () {
         game.timer.lastTime -= 100;
-        console.log(game.timer.lastTime);
+        // console.log(game.timer.lastTime);
         if (game.timer.lastTime <= 0) {
           game.timer.timeout();
         }
@@ -108,8 +132,8 @@ var maze = new Maze({
     var c = nearNode.x,
       r = nearNode.y;
     // 用于生成一种非Perfect迷宫
-    this.checkCount[c + "-" + r] = this.checkCount[c + "-" + r] || 0;
-    var count = ++this.checkCount[c + "-" + r];
+    this.checkCount[c + '-' + r] = this.checkCount[c + '-' + r] || 0;
+    var count = ++this.checkCount[c + '-' + r];
     return Math.random() < 0.3 && count < 3;
   },
 
@@ -165,7 +189,7 @@ var maze = new Maze({
   updateCurrent: function () {
     console.info(this.currentNode);
     if (this.trace) {
-      this.traceInfo[this.currentNode.x + "-" + this.currentNode.y] = this.stepCount;
+      this.traceInfo[this.currentNode.x + '-' + this.currentNode.y] = this.stepCount;
     }
     if (this.braid) {
       return;
@@ -261,7 +285,7 @@ function renderMaze(canvas, maze, pathCollector) {
 
   var renderToCanvas;
   // 搜集路径时不渲染到canvas
-  if (typeof pathCollector == "function") {
+  if (typeof pathCollector == 'function') {
     renderToCanvas = false;
     context = {
       fillRect: function (x, y, w, h) {
@@ -269,7 +293,7 @@ function renderMaze(canvas, maze, pathCollector) {
       },
       fillText: function () {}
     };
-    cellW = cellH = cellSize = 1;
+    cellW = cellH = cellSize = game.option.cellSize;
     wallWidth = cellSize / 8;
     x = y = 0;
   } else {
@@ -277,18 +301,18 @@ function renderMaze(canvas, maze, pathCollector) {
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
 
-    context = canvas.getContext("2d");
+    context = canvas.getContext('2d');
 
-    context.fillStyle = "#eeeeee";
+    context.fillStyle = '#eeeeee';
     context.fillRect(0, 0, canvas.width, canvas.height);
-    context.fillStyle = "#334466";
-    context.strokeStyle = "#334466";
-    context.font = "12px Arial";
+    context.fillStyle = '#334466';
+    context.strokeStyle = '#334466';
+    context.font = '12px Arial';
     context.lineWidth = wallWidth;
   }
 
-  var traceColors = ["#990000", "#009900", "#000099", "#999900", "#990099", "#009999"],
-    traceFillBlankColor = "#999999",
+  var traceColors = ['#990000', '#009900', '#000099', '#999900', '#990099', '#009999'],
+    traceFillBlankColor = '#999999',
     traceColorIdx = 0;
 
 
@@ -312,25 +336,25 @@ function renderMaze(canvas, maze, pathCollector) {
 
       var nodeType = null;
       if (node == maze.startNode) {
-        nodeType = "S";
+        nodeType = 'S';
         if (renderToCanvas) {
-          context.fillStyle = "#f3bbaa";
+          context.fillStyle = '#f3bbaa';
           context.fillRect(cx, cy, cellW, cellH);
-          context.fillStyle = "#334466";
+          context.fillStyle = '#334466';
           context.fillText(nodeType, cx + cellW * 1 / 3, cy + cellH - 2);
         }
       } else if (node == maze.endNode) {
-        nodeType = "E";
+        nodeType = 'E';
         if (renderToCanvas) {
-          context.fillStyle = "#f3bbaa";
+          context.fillStyle = '#f3bbaa';
           context.fillRect(cx, cy, cellW, cellH);
-          context.fillStyle = "#334466";
+          context.fillStyle = '#334466';
           context.fillText(nodeType, cx + cellW * 1 / 3, cy + cellH - 2);
         }
       } else {
         if (renderToCanvas) {
           if (maze.trace) {
-            var text = maze.traceInfo[node.x + "-" + node.y];
+            var text = maze.traceInfo[node.x + '-' + node.y];
             context.fillText(text, cx + cellW * 1 / 3, cy + cellH - 2);
           }
           if (maze.trace) {
@@ -412,17 +436,18 @@ function makeScene() {
     //      scene.enablePhysics(new BABYLON.Vector3(0, -9.8, 0), new BABYLON.OimoJSPlugin());
 
     // create a FreeCamera, and set its position to (x:0, y:5, z:-10)
-    var camera = new BABYLON.ArcRotateCamera("camera1", 0, 0, 0, new BABYLON.Vector3(5, 9, -10), scene);
+    var camera = new BABYLON.ArcRotateCamera('camera1', 0, 0, 0, new BABYLON.Vector3(5, 9, -10), scene);
     camera.setTarget(BABYLON.Vector3.Zero());
     camera.setPosition(new BABYLON.Vector3(10, 15, -15));
     camera.attachControl(canvas, true);
 
     // create a basic light, aiming 0,1,0 - meaning, to the sky
-    var light = new BABYLON.HemisphericLight('light1', new BABYLON.Vector3(0, 1, 0), scene);
+    var light1 = new BABYLON.HemisphericLight('light1', new BABYLON.Vector3(-100, 50, 100), scene);
+    var light2 = new BABYLON.HemisphericLight('light2', new BABYLON.Vector3(100, 50, -100), scene);
 
     // create a built-in "ground" shape; its constructor takes the same 5 params as the sphere's one
     var ground = BABYLON.Mesh.CreateGround('ground', 30, 30, 2, scene);
-    ground.material = new BABYLON.StandardMaterial("TextPlaneMaterial", scene);
+    ground.material = new BABYLON.StandardMaterial('TextPlaneMaterial', scene);
     ground.material.backFaceCulling = false;
     ground.material.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5);
     ground.setPhysicsState({ impostor: BABYLON.PhysicsEngine.PlaneImpostor, move: false, restitution: 0, mass: 0, friction: 0.5 });
@@ -437,37 +462,37 @@ function makeScene() {
     // show axis
     var showAxis = function (size) {
       var makeTextPlane = function (text, color, size) {
-        var dynamicTexture = new BABYLON.DynamicTexture("DynamicTexture", 50, scene, true);
+        var dynamicTexture = new BABYLON.DynamicTexture('DynamicTexture', 50, scene, true);
         dynamicTexture.hasAlpha = true;
-        dynamicTexture.drawText(text, 5, 40, "bold 36px Arial", color, "transparent", true);
-        var plane = BABYLON.Mesh.CreatePlane("TextPlane", size, scene, true);
-        plane.material = new BABYLON.StandardMaterial("TextPlaneMaterial", scene);
+        dynamicTexture.drawText(text, 5, 40, 'bold 36px Arial', color, 'transparent', true);
+        var plane = BABYLON.Mesh.CreatePlane('TextPlane', size, scene, true);
+        plane.material = new BABYLON.StandardMaterial('TextPlaneMaterial', scene);
         plane.material.backFaceCulling = false;
         plane.material.specularColor = new BABYLON.Color3(0, 0, 0);
         plane.material.diffuseTexture = dynamicTexture;
         return plane;
       };
 
-      var axisX = BABYLON.Mesh.CreateLines("axisX", [
+      var axisX = BABYLON.Mesh.CreateLines('axisX', [
         BABYLON.Vector3.Zero(), new BABYLON.Vector3(size, 0, 0), new BABYLON.Vector3(size * 0.95, 0.05 * size, 0),
         new BABYLON.Vector3(size, 0, 0), new BABYLON.Vector3(size * 0.95, -0.05 * size, 0)
       ], scene);
       axisX.color = new BABYLON.Color3(1, 0, 0);
-      var xChar = makeTextPlane("X", "red", size / 10);
+      var xChar = makeTextPlane('X', 'red', size / 10);
       xChar.position = new BABYLON.Vector3(0.9 * size, -0.05 * size, 0);
-      var axisY = BABYLON.Mesh.CreateLines("axisY", [
+      var axisY = BABYLON.Mesh.CreateLines('axisY', [
         BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, size, 0), new BABYLON.Vector3(-0.05 * size, size * 0.95, 0),
         new BABYLON.Vector3(0, size, 0), new BABYLON.Vector3(0.05 * size, size * 0.95, 0)
       ], scene);
       axisY.color = new BABYLON.Color3(0, 1, 0);
-      var yChar = makeTextPlane("Y", "green", size / 10);
+      var yChar = makeTextPlane('Y', 'green', size / 10);
       yChar.position = new BABYLON.Vector3(0, 0.9 * size, -0.05 * size);
-      var axisZ = BABYLON.Mesh.CreateLines("axisZ", [
+      var axisZ = BABYLON.Mesh.CreateLines('axisZ', [
         BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, 0, size), new BABYLON.Vector3(0, -0.05 * size, size * 0.95),
         new BABYLON.Vector3(0, 0, size), new BABYLON.Vector3(0, 0.05 * size, size * 0.95)
       ], scene);
       axisZ.color = new BABYLON.Color3(0, 0, 1);
-      var zChar = makeTextPlane("Z", "blue", size / 10);
+      var zChar = makeTextPlane('Z', 'blue', size / 10);
       zChar.position = new BABYLON.Vector3(0, 0.05 * size, 0.9 * size);
     };
 
@@ -511,7 +536,7 @@ function makeScene() {
         faceUV[i] = new BABYLON.Vector4(i / hSpriteNb, i / vSpriteNb, (i + 1) / hSpriteNb, (i + 1) / vSpriteNb);
       }
 
-      var wallHeight = 0.6;
+      var wallHeight = 1;
       var createBoxOptions = function (w) {
         return {
           width: Math.abs(w[1].x - w[0].x),
@@ -522,10 +547,10 @@ function makeScene() {
       // 墙体样式
       // var wallMat = new BABYLON.StandardMaterial("mat_wall", scene);
       // wallMat.diffuseColor = new BABYLON.Color3(0.5, 0.8, 0.6);
-      var materialWall = new BABYLON.StandardMaterial("wood", scene);
-      materialWall.diffuseTexture = new BABYLON.Texture("img/wood.jpg", scene); // wood.jpg
-      var mazeShiftX = 10,
-        mazeShiftZ = 10;
+      var materialWall = new BABYLON.StandardMaterial('wood', scene);
+      materialWall.diffuseTexture = new BABYLON.Texture('img/wood.jpg', scene); // wood.jpg
+      var mazeShiftX = game.option.width / 2,
+        mazeShiftZ = game.option.width / 2;
       for (var i = 0; i < walls.length; ++i) {
         var w = walls[i];
 
@@ -533,7 +558,7 @@ function makeScene() {
         // shapeline.color = BABYLON.Color3.Green();
 
         var options = createBoxOptions(w);
-        var box = BABYLON.MeshBuilder.CreateBox("wall_box_" + i, options, scene);
+        var box = BABYLON.MeshBuilder.CreateBox('wall_box_' + i, options, scene);
         box.position = new BABYLON.Vector3(
           w[0].x + (w[1].x - w[0].x) / 2 - mazeShiftX,
           wallHeight / 2,
@@ -552,57 +577,55 @@ function makeScene() {
       }
 
 
-      var cellSize = 1,
-        mazeWidth = 10,
-        mazeHeight = 10;
+      var cellSize = game.option.cellSize;
 
       // 球
       var ballRadius = 0.5;
       var ball = BABYLON.Mesh.CreateSphere('ball', 16, ballRadius, scene);
-      ball.position.y = ballRadius / 2 + 10;
+      ball.position.y = ballRadius / 2 + 0.5;
       ball.position.x = (walls[0][0].x + cellSize) / 2 + (cellSize / 8) - mazeShiftX;
       ball.position.z = (walls[0][0].z - cellSize) / 2 - (cellSize / 8) + mazeShiftZ;
       // 材质
-      var materialBall = new BABYLON.StandardMaterial("ball", scene);
-      materialBall.diffuseTexture = new BABYLON.Texture("img/metal9.jpg", scene); // wood.jpg
+      var materialBall = new BABYLON.StandardMaterial('ball', scene);
+      materialBall.diffuseTexture = new BABYLON.Texture('img/metal9.jpg', scene); // wood.jpg
       ball.material = materialBall;
       ball.material.diffuseColor = new BABYLON.Color3(0.8, 0.8, 0.8);
       ball.checkCollisions = true;
       ball.setPhysicsState({ impostor: BABYLON.PhysicsEngine.SphereImpostor, move: true, restitution: 0.1, mass: 3, friction: 0.1 });
       // 相机
       // create a FreeCamera, and set its position to (x:0, y:5, z:-10)
-      var cameraAll = new BABYLON.ArcRotateCamera("cameraAll", 0, 0, 0, new BABYLON.Vector3(5, 9, -10), scene);
+      var cameraAll = new BABYLON.ArcRotateCamera('cameraAll', 0, 0, 0, new BABYLON.Vector3(0, 5, 0), scene);
       cameraAll.setTarget(BABYLON.Vector3.Zero());
-      cameraAll.setPosition(new BABYLON.Vector3(10, 15, -15));
+      cameraAll.setPosition(new BABYLON.Vector3(0, 25, -0.5));
       cameraAll.attachControl(canvas, true);
       // 跟随相机
-      var cameraFollow = game.cameraFollow = new BABYLON.FollowCamera("cameraFollow", new BABYLON.Vector3(10, 10, -20), scene);
+      var cameraFollow = game.cameraFollow = new BABYLON.FollowCamera('cameraFollow', new BABYLON.Vector3(10, 10, -20), scene);
       cameraFollow.lockedTarget = ball;
       cameraFollow.radius = 0; // how far from the object to follow
       cameraFollow.heightOffset = 3; // how high above the object to place the camera
       cameraFollow.rotationOffset = 180; // the viewing angle
-      cameraFollow.cameraAcceleration = 0.005 // how fast to move
-      cameraFollow.maxCameraSpeed = 20 // speed limit
-        // 摇杆相机
-      var cameraSticks = game.sticksCamera = new BABYLON.VirtualJoysticksCamera("cameraSticks", new BABYLON.Vector3(-10, 1, 10), scene);
+      cameraFollow.cameraAcceleration = 0.005; // how fast to move
+      cameraFollow.maxCameraSpeed = 20; // speed limit
+      // 摇杆相机
+      var cameraSticks = game.sticksCamera = new BABYLON.VirtualJoysticksCamera('cameraSticks', new BABYLON.Vector3(-10, 1, 10), scene);
       cameraSticks.lockedTarget = ball;
 
       // 激活相机
-      scene.activeCamera = cameraFollow
-        // 开启多个相机
-        // scene.activeCameras.push(cameraAll);
-        // scene.activeCameras.push(cameraFollow);
-        // 终点
+      scene.activeCamera = cameraAll;
+      // 开启多个相机
+      // scene.activeCameras.push(cameraAll);
+      // scene.activeCameras.push(cameraFollow);
+      // 终点
       var diamondBorderSize = 0.3,
         diamondOptions = { width: diamondBorderSize, height: diamondBorderSize, depth: diamondBorderSize };
-      var diamond = scene.diamond = BABYLON.MeshBuilder.CreateBox("diamond", diamondOptions, scene);
-      scene.finishflagX = (walls[0][0].x - cellSize) / 2 + (cellSize / 8) - mazeShiftX + mazeWidth * cellSize
+      var diamond = scene.diamond = BABYLON.MeshBuilder.CreateBox('diamond', diamondOptions, scene);
+      scene.finishflagX = (walls[0][0].x - cellSize) / 2 + (cellSize / 8) - mazeShiftX + mazeWidth * cellSize;
       diamond.position = new BABYLON.Vector3(
         scene.finishflagX,
         diamondBorderSize * Math.sqrt(2) / 2.0,
         (walls[0][0].z + cellSize) / 2 - (cellSize / 8) + mazeShiftZ - mazeHeight * cellSize
       );
-      diamond.material = new BABYLON.StandardMaterial("diamond_mat", scene);
+      diamond.material = new BABYLON.StandardMaterial('diamond_mat', scene);
       diamond.material.diffuseColor = new BABYLON.Color3(0.5, 0.75, 1);
       diamond.rotation.x = Math.PI / 4;
       diamond.rotation.z = Math.PI / 4;
@@ -632,17 +655,17 @@ function makeScene() {
         D_MASK = 15,
         M_S = 0.25, // 移动速度
         KEY_VALUES = {
-          "w": D_U,
-          "d": D_R,
-          "s": D_D,
-          "a": D_L
+          'w': D_U,
+          'd': D_R,
+          's': D_D,
+          'a': D_L
         },
         direction = 0;
       scene.actionManager.registerAction(
         new BABYLON.ExecuteCodeAction(
           BABYLON.ActionManager.OnKeyDownTrigger,
           function (e) {
-            var key = (e.sourceEvent.key || "").toLowerCase(),
+            var key = (e.sourceEvent.key || '').toLowerCase(),
               keyValue = KEY_VALUES[key];
             if (keyValue)
               direction |= keyValue;
@@ -651,7 +674,7 @@ function makeScene() {
         new BABYLON.ExecuteCodeAction(
           BABYLON.ActionManager.OnKeyUpTrigger,
           function (e) {
-            var key = (e.sourceEvent.key || "").toLowerCase(),
+            var key = (e.sourceEvent.key || '').toLowerCase(),
               keyValue = KEY_VALUES[key];
             if (keyValue)
               direction &= D_MASK ^ keyValue;
@@ -661,16 +684,24 @@ function makeScene() {
         new BABYLON.ExecuteCodeAction(
           BABYLON.ActionManager.OnEveryFrameTrigger,
           function () {
-            console.info(direction);
+
+            // 获取偏移方向
+            var now = game.direction.now;
+            var gamma = now.gamma > 0 ? D_R : D_L;
+            var beta = now.beta > 0 ? D_D : D_U;
+
+            // 偏移量
+            M_S = 0.25 * (Math.abs(gamma) + Math.abs(beta) / 2);
+            console.info(gamma, beta, M_S);
             var x = 0,
               z = 0;
-            if (direction & D_R)
+            if (direction & D_R || gamma & D_R)
               x = M_S;
-            else if (direction & D_L)
+            else if (direction & D_L || gamma & D_L)
               x = -M_S;
-            if (direction & D_U)
+            if (direction & D_U || beta & D_U)
               z = M_S;
-            else if (direction & D_D)
+            else if (direction & D_D || beta & D_D)
               z = -M_S;
             var moveDirection = new BABYLON.Vector3(x, 0, z);
             ball.applyImpulse(moveDirection, ball.position);
@@ -679,7 +710,7 @@ function makeScene() {
         ));
 
     }
-
+    // 显示坐标轴
     showAxis(15);
 
     // return the created scene
@@ -704,5 +735,6 @@ function makeScene() {
   window.addEventListener('resize', function () {
     engine.resize();
   });
+  document.getElementById('renderCanvas');
   return engine;
 }
