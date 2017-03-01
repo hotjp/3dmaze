@@ -3,8 +3,8 @@ var game = {
   option: {
     cellSize: 1,
     time: 1 * 60 * 1000,
-    width: 10,
-    height: 10
+    width: 15,
+    height: 15
   },
   engine: null,
   direction: {
@@ -536,7 +536,7 @@ function makeScene() {
         faceUV[i] = new BABYLON.Vector4(i / hSpriteNb, i / vSpriteNb, (i + 1) / hSpriteNb, (i + 1) / vSpriteNb);
       }
 
-      var wallHeight = 1;
+      var wallHeight = 0.6;
       var createBoxOptions = function (w) {
         return {
           width: Math.abs(w[1].x - w[0].x),
@@ -619,11 +619,11 @@ function makeScene() {
       var diamondBorderSize = 0.3,
         diamondOptions = { width: diamondBorderSize, height: diamondBorderSize, depth: diamondBorderSize };
       var diamond = scene.diamond = BABYLON.MeshBuilder.CreateBox('diamond', diamondOptions, scene);
-      scene.finishflagX = (walls[0][0].x - cellSize) / 2 + (cellSize / 8) - mazeShiftX + mazeWidth * cellSize;
+      scene.finishflagX = (walls[0][0].x - cellSize) / 2 + (cellSize / 8) - mazeShiftX + maze.width * cellSize;
       diamond.position = new BABYLON.Vector3(
         scene.finishflagX,
         diamondBorderSize * Math.sqrt(2) / 2.0,
-        (walls[0][0].z + cellSize) / 2 - (cellSize / 8) + mazeShiftZ - mazeHeight * cellSize
+        (walls[0][0].z + cellSize) / 2 - (cellSize / 8) + mazeShiftZ - maze.height * cellSize
       );
       diamond.material = new BABYLON.StandardMaterial('diamond_mat', scene);
       diamond.material.diffuseColor = new BABYLON.Color3(0.5, 0.75, 1);
@@ -687,21 +687,21 @@ function makeScene() {
 
             // 获取偏移方向
             var now = game.direction.now;
-            var gamma = now.gamma > 0 ? D_R : D_L;
-            var beta = now.beta > 0 ? D_D : D_U;
+            var gammaD = now.gamma > 0 ? D_R : D_L;
+            var betaD = now.beta > 0 ? D_D : D_U;
 
-            // 偏移量
-            M_S = 0.25 * (Math.abs(gamma) + Math.abs(beta) / 2);
-            console.info(gamma, beta, M_S);
+            // 动量
+            M_S = 0.25 * (Math.abs(now.gamma) / 2 + Math.abs(now.beta) / 4);
+            // console.info(gamma, beta, M_S);
             var x = 0,
               z = 0;
-            if (direction & D_R || gamma & D_R)
+            if (direction & D_R || gammaD & D_R)
               x = M_S;
-            else if (direction & D_L || gamma & D_L)
+            else if (direction & D_L || gammaD & D_L)
               x = -M_S;
-            if (direction & D_U || beta & D_U)
+            if (direction & D_U || betaD & D_U)
               z = M_S;
-            else if (direction & D_D || beta & D_D)
+            else if (direction & D_D || betaD & D_D)
               z = -M_S;
             var moveDirection = new BABYLON.Vector3(x, 0, z);
             ball.applyImpulse(moveDirection, ball.position);
