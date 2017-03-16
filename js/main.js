@@ -64,7 +64,11 @@ var game = {
   },
   finished: function () {
     this.stopRender();
-    alert('成功');
+    var times = new Date() - game.timer.flag;
+    var msg = conform('恭喜你完成了迷宫挑战，用时：'+ times / 1000 +'s,是否再来一局？');
+    if(msg){
+      game.init();
+    }
   },
   timer: {
     lastTime: 0,
@@ -86,7 +90,11 @@ var game = {
       var clock = game.timer.clock;
       clearInterval(clock);
       game.stopRender();
-      alert('时间到');
+      var times = new Date() - game.timer.flag;
+      var msg = conform('很遗憾你没能完成迷宫挑战，用时：'+ times / 1000 +'s,是否再来一局？');
+      if(msg){
+        game.init();
+      }
     }
   }
 };
@@ -442,8 +450,12 @@ function makeScene() {
     camera.attachControl(canvas, true);
 
     // create a basic light, aiming 0,1,0 - meaning, to the sky
-    var light1 = new BABYLON.HemisphericLight('light1', new BABYLON.Vector3(-100, 50, 100), scene);
-    var light2 = new BABYLON.HemisphericLight('light2', new BABYLON.Vector3(100, 50, -100), scene);
+    var light1 = new BABYLON.HemisphericLight('light1', new BABYLON.Vector3(0, 1, 0), scene);
+    light1.diffuse = new BABYLON.Color3(1, 1, 1);
+    light1.specular = new BABYLON.Color3(0.2, 0.2, 0.2);
+    light1.groundColor = new BABYLON.Color3(0, 0, 0);
+    // var light1 = new BABYLON.HemisphericLight('light1', new BABYLON.Vector3(-100, 50, 100), scene);
+    // var light2 = new BABYLON.HemisphericLight('light2', new BABYLON.Vector3(100, 50, -100), scene);
 
     // create a built-in "ground" shape; its constructor takes the same 5 params as the sphere's one
     var ground = BABYLON.Mesh.CreateGround('ground', 30, 30, 2, scene);
@@ -582,7 +594,7 @@ function makeScene() {
       // 球
       var ballRadius = 0.5;
       var ball = BABYLON.Mesh.CreateSphere('ball', 16, ballRadius, scene);
-      ball.position.y = ballRadius / 2 + 0.5;
+      ball.position.y = ballRadius / 2 + 0.2;
       ball.position.x = (walls[0][0].x + cellSize) / 2 + (cellSize / 8) - mazeShiftX;
       ball.position.z = (walls[0][0].z - cellSize) / 2 - (cellSize / 8) + mazeShiftZ;
       // 材质
@@ -711,7 +723,7 @@ function makeScene() {
 
     }
     // 显示坐标轴
-    showAxis(15);
+    // showAxis(15);
 
     // return the created scene
     return scene;
