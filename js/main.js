@@ -35,7 +35,6 @@ var game = {
     return direction;
   },
   getDirection: function () {
-    // TODO: 获取当前偏移方向
     game.direction.flag = JSON.parse(JSON.stringify(game.direction.now));
   },
   getFlagDirection: function () {
@@ -65,7 +64,7 @@ var game = {
   finished: function () {
     this.stopRender();
     var times = new Date() - game.timer.flag;
-    var msg = conform('恭喜你完成了迷宫挑战，用时：'+ times / 1000 +'s,是否再来一局？');
+    var msg = confirm('恭喜你完成了迷宫挑战，用时：'+ times / 1000 +'s,是否再来一局？');
     if(msg){
       game.init();
     }
@@ -91,7 +90,7 @@ var game = {
       clearInterval(clock);
       game.stopRender();
       var times = new Date() - game.timer.flag;
-      var msg = conform('很遗憾你没能完成迷宫挑战，用时：'+ times / 1000 +'s,是否再来一局？');
+      var msg = confirm('很遗憾你没能完成迷宫挑战，用时：'+ times / 1000 +'s,是否再来一局？');
       if(msg){
         game.init();
       }
